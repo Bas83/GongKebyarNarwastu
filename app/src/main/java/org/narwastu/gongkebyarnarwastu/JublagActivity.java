@@ -143,7 +143,7 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
         //  TODO: stop only if already playing
         Integer streamId = streamIdsByNote.get(note);
         if (streamId != null)
-            sp.stop(streamIdsByNote.get(note));
+            sp.setVolume(streamId, 0, 0);
         int newStreamId = sp.play(soundIdsByNote.get(note), volume, volume, 1, 0, jublag.getSound(note).getPitch());
         streamIdsByNote.put(note, newStreamId);
         Log.d("JublagActivity", String.format("Played note %s, stream id %d", note, newStreamId));
@@ -152,8 +152,13 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
     private void stopNote(Note note) {
         // TODO: 31/03/2017 find in map of notes actually being played, stop it
         Integer streamId = streamIdsByNote.get(note);
+        // Don't actually stop, this causes a clicking sound due to the waveform
+        // being stopped in the middle of a wave, rather than at a zero-crossing.
+        // The downside is that if someone is hammering a note, previous different notes will be automatically cut off
+        // due to reaching the SoundPool limit, because all hits on the same note will trigger a new wave being played,
+        // even though you only hear the last one.
         if (streamId != null)
-            sp.stop(streamId);
+            sp.setVolume(streamId, 0, 0);
     }
 
     private void toast(String msg) {
