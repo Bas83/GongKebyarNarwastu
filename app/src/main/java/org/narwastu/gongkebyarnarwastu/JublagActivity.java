@@ -12,39 +12,20 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import org.narwastu.gongkebyarnarwastu.instrument.Instrument;
+import org.narwastu.gongkebyarnarwastu.instrument.Note;
+import org.narwastu.gongkebyarnarwastu.instrument.Sound;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class JublagActivity extends AppCompatActivity implements View.OnTouchListener {
 
-    private final static int DING = 1;
-    private final static int DONG = 2;
-    private final static int DENG = 3;
-    private final static int DUNG = 4;
-    private final static int DANG = 5;
-    private int dingSoundId = -1;
-    private int dongSoundId = -1;
-    private int dengSoundId = -1;
-    private int dungSoundId = -1;
-    private int dangSoundId = -1;
-    private int dingStreamId = -1;
-    private int dongStreamId = -1;
-    private int dengStreamId = -1;
-    private int dungStreamId = -1;
-    private int dangStreamId = -1;
+    //TODO: put ids in map by Note
+    private Map<Note, Integer> soundIdsByNote = new HashMap<>();
+    private Map<Note, Integer> streamIdsByNote = new HashMap<>();
 
-
-    //batubulan setup
-    /*
-    private float dongRelativePitch = 1.19f;
-    private float dengRelativePitch = 1.34f;
-    private float dungRelativePitch = 1.6f;
-    private float dangRelativePitch = 1.74f;
-*/
-
-    //ubud kaler setup
-    private float dongRelativePitch = 1.04f;
-    private float dengRelativePitch = 1.21f;
-    private float dungRelativePitch = 1.52f;
-    private float dangRelativePitch = 1.6f;
-
+    private Instrument jublag;
 
     private SoundPool sp;
     private boolean soundsLoaded = false;
@@ -74,15 +55,30 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
             }
 
         });
-        //all the same but played at different pitch, because using the actual same id to play notes at different pitch seems buggy
 
-        dingSoundId = sp.load(this, R.raw.ding, 1);
-        dongSoundId = sp.load(this, R.raw.ding, 1);
-        dengSoundId = sp.load(this, R.raw.ding, 1);
-        dungSoundId = sp.load(this, R.raw.ding, 1);
-        dangSoundId = sp.load(this, R.raw.ding, 1);
+        jublag = initializeJublag();
+
+        for (Note note : jublag.getNotes())
+            soundIdsByNote.put(note, sp.load(this, jublag.getSound(note).getResourceId(), 1));
 
         toast("Touch a note to play, or touch in the lower part to stop a note.");
+    }
+
+    private Instrument initializeJublag() {
+        float dongRelativePitch = 1.04f;
+        float dengRelativePitch = 1.21f;
+        float dungRelativePitch = 1.52f;
+        float dangRelativePitch = 1.6f;
+
+        Instrument jublag = new Instrument();
+        //all the same but played at different pitch, because using the actual same id to play notes at different pitch seems buggy
+        jublag.addSound(Note.M_DING, new Sound(R.raw.ding, 1f));
+        jublag.addSound(Note.M_DONG, new Sound(R.raw.ding, dongRelativePitch));
+        jublag.addSound(Note.M_DENG, new Sound(R.raw.ding, dengRelativePitch));
+        jublag.addSound(Note.M_DUNG, new Sound(R.raw.ding, dungRelativePitch));
+        jublag.addSound(Note.M_DANG, new Sound(R.raw.ding, dangRelativePitch));
+
+        return jublag;
     }
 
     @Override
@@ -106,25 +102,25 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
                 int tolerance = 25;
 
                 if (closeMatch(Color.rgb(0, 0, 255), touchColor, tolerance))
-                    playNote(DING);
+                    playNote(Note.M_DING);
                 else if (closeMatch(Color.rgb(0, 0, 204), touchColor, tolerance))
-                    stopNote(DING);
+                    stopNote(Note.M_DING);
                 else if (closeMatch(Color.rgb(255, 0, 255), touchColor, tolerance))
-                    playNote(DONG);
+                    playNote(Note.M_DONG);
                 else if (closeMatch(Color.rgb(204, 0, 204), touchColor, tolerance))
-                    stopNote(DONG);
+                    stopNote(Note.M_DONG);
                 else if (closeMatch(Color.rgb(255, 0, 0), touchColor, tolerance))
-                    playNote(DENG);
+                    playNote(Note.M_DENG);
                 else if (closeMatch(Color.rgb(204, 0, 0), touchColor, tolerance))
-                    stopNote(DENG);
+                    stopNote(Note.M_DENG);
                 else if (closeMatch(Color.rgb(0, 255, 0), touchColor, tolerance))
-                    playNote(DUNG);
+                    playNote(Note.M_DUNG);
                 else if (closeMatch(Color.rgb(0, 204, 0), touchColor, tolerance))
-                    stopNote(DUNG);
+                    stopNote(Note.M_DUNG);
                 else if (closeMatch(Color.rgb(0, 255, 255), touchColor, tolerance))
-                    playNote(DANG);
+                    playNote(Note.M_DANG);
                 else if (closeMatch(Color.rgb(0, 204, 204), touchColor, tolerance))
-                    stopNote(DANG);
+                    stopNote(Note.M_DANG);
 
 
                 handledHere = true;
@@ -140,60 +136,25 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
         return handledHere;
     }
 
-    private void playNote(int note) {
+    private void playNote(Note note) {
+        if (!soundsLoaded)
+            return;
 
-        //  TODO: if already playing, stop and play again
-        switch (note) {
-            case DING:
-                sp.stop(dingStreamId);
-                dingStreamId = sp.play(dingSoundId, volume, volume, 1, 0, 1f);
-                Log.d("JublagActivity", String.format("Played ding, stream id %d", dingStreamId));
-                break;
-            case DONG:
-                sp.stop(dongStreamId);
-                dongStreamId = sp.play(dongSoundId, volume, volume, 1, 0, dongRelativePitch);
-                break;
-            case DENG:
-                sp.stop(dengStreamId);
-                dengStreamId = sp.play(dengSoundId, volume, volume, 1, 0, dengRelativePitch);
-                break;
-            case DUNG:
-                sp.stop(dungStreamId);
-                dungStreamId = sp.play(dungSoundId, volume, volume, 1, 0, dungRelativePitch);
-                break;
-            case DANG:
-                sp.stop(dangStreamId);
-                dangStreamId = sp.play(dangSoundId, volume, volume, 1, 0, dangRelativePitch);
-                break;
-
-            default:
-                break;
-        }
+        //  TODO: stop only if already playing
+        Integer streamId = streamIdsByNote.get(note);
+        if (streamId != null)
+            sp.stop(streamIdsByNote.get(note));
+        int newStreamId = sp.play(soundIdsByNote.get(note), volume, volume, 1, 0, jublag.getSound(note).getPitch());
+        streamIdsByNote.put(note, newStreamId);
+        Log.d("JublagActivity", String.format("Played note %s, stream id %d", note, newStreamId));
     }
 
-    private void stopNote(int note) {
-        //// TODO: 31/03/2017 find in map of notes being played, stop it
-        switch (note) {
-            case DING:
-                sp.stop(dingStreamId);
-                break;
-            case DONG:
-                sp.stop(dongStreamId);
-                break;
-            case DENG:
-                sp.stop(dengStreamId);
-                break;
-            case DUNG:
-                sp.stop(dungStreamId);
-                break;
-            case DANG:
-                sp.stop(dangStreamId);
-                break;
-            default:
-                break;
-        }
+    private void stopNote(Note note) {
+        // TODO: 31/03/2017 find in map of notes actually being played, stop it
+        Integer streamId = streamIdsByNote.get(note);
+        if (streamId != null)
+            sp.stop(streamId);
     }
-
 
     private void toast(String msg) {
         Toast.makeText(getApplicationContext(), msg, Toast.LENGTH_LONG).show();
