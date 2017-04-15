@@ -231,4 +231,9 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
             mp.start();
     }
 
+    public void pause(View view) {
+        if (mp != null)
+            mp.pause();
+    }
+
 }
