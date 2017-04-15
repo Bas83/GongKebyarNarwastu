@@ -8,23 +8,29 @@
 
     <FrameLayout
         android:layout_width="0dp"
-        android:layout_height="495dp"
+        android:layout_height="0dp"
         android:layout_marginBottom="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent">
-
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
         <ImageView
             android:id="@+id/ImageViewJublag"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            app:srcCompat="@drawable/jublag_edit25" />
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="0dp"
+            app:srcCompat="@drawable/jublag_edit10" />
 
         <ImageView
             android:id="@+id/ImageViewJublagOverlay"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="0dp"
             android:visibility="invisible"
-            app:srcCompat="@drawable/jublag_edit25_overlay" />
+            app:srcCompat="@drawable/jublag_edit10_overlay" />
     </FrameLayout>
 </android.support.constraint.ConstraintLayout>
