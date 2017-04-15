@@ -3,6 +3,7 @@ package org.narwastu.gongkebyarnarwastu;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,18 +17,19 @@ import org.narwastu.gongkebyarnarwastu.instrument.Instrument;
 import org.narwastu.gongkebyarnarwastu.instrument.Note;
 import org.narwastu.gongkebyarnarwastu.instrument.Sound;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class JublagActivity extends AppCompatActivity implements View.OnTouchListener {
 
-    //TODO: put ids in map by Note
     private Map<Note, Integer> soundIdsByNote = new HashMap<>();
     private Map<Note, Integer> streamIdsByNote = new HashMap<>();
 
     private Instrument jublag;
-
     private SoundPool sp;
+    private MediaPlayer mp;
     private boolean soundsLoaded = false;
     private float volume;
 
@@ -60,6 +62,20 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
 
         for (Note note : jublag.getNotes())
             soundIdsByNote.put(note, sp.load(this, jublag.getSound(note).getResourceId(), 1));
+
+
+        SongsManager sm = new SongsManager();
+        ArrayList<Song> playList = sm.getPlayList();
+        if (!playList.isEmpty()) {
+            mp = new MediaPlayer();
+            mp.setVolume(volume, volume);
+            try {
+                mp.setDataSource(playList.get(0).getPath());
+                mp.prepare();
+            } catch (IOException e) {
+                Log.w("JublagActivity", "Failed to load song");
+            }
+        }
 
         toast("Touch a note to play, or touch in the lower part to stop a note.");
     }
@@ -209,5 +225,10 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
         if (Math.abs(Color.blue(color1) - Color.blue(color2)) > tolerance) return false;
         return true;
     } // end match
+
+    public void play(View view) {
+        if (mp != null)
+            mp.start();
+    }
 
 }

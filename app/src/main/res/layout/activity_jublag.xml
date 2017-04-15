@@ -32,5 +32,12 @@
             android:layout_marginBottom="0dp"
             android:visibility="invisible"
             app:srcCompat="@drawable/jublag_edit10_overlay" />
+
+        <ImageButton
+            android:id="@+id/imageButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="play"
+            app:srcCompat="@android:drawable/ic_media_play" />
     </FrameLayout>
 </android.support.constraint.ConstraintLayout>
