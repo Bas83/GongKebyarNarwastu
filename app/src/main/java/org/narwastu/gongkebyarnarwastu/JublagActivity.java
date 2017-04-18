@@ -1,10 +1,12 @@
 package org.narwastu.gongkebyarnarwastu;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.SoundPool;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,15 +20,15 @@ import org.narwastu.gongkebyarnarwastu.instrument.Note;
 import org.narwastu.gongkebyarnarwastu.instrument.Sound;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 public class JublagActivity extends AppCompatActivity implements View.OnTouchListener {
 
+    private final int SONG_SELECTED = 1;
+    private String TAG = "JublagActivity";
     private Map<Note, Integer> soundIdsByNote = new HashMap<>();
     private Map<Note, Integer> streamIdsByNote = new HashMap<>();
-
     private Instrument jublag;
     private SoundPool sp;
     private MediaPlayer mp;
@@ -49,7 +51,14 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
         float maxVolume = (float) audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
         volume = actVolume / maxVolume;
 
-        sp = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            SoundPool.Builder sp21 = new SoundPool.Builder();
+            sp21.setMaxStreams(5);
+            sp = sp21.build();
+        } else {
+            sp = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+        }
         sp.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
             @Override
             public void onLoadComplete(SoundPool soundPool, int sampleId, int status) {
@@ -64,18 +73,8 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
             soundIdsByNote.put(note, sp.load(this, jublag.getSound(note).getResourceId(), 1));
 
 
-        SongsManager sm = new SongsManager();
-        ArrayList<Song> playList = sm.getPlayList();
-        if (!playList.isEmpty()) {
-            mp = new MediaPlayer();
-            mp.setVolume(volume, volume);
-            try {
-                mp.setDataSource(playList.get(0).getPath());
-                mp.prepare();
-            } catch (IOException e) {
-                Log.w("JublagActivity", "Failed to load song");
-            }
-        }
+        mp = new MediaPlayer();
+        mp.setVolume(volume, volume);
 
         toast("Touch a note to play, or touch in the lower part to stop a note.");
     }
@@ -162,7 +161,7 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
             sp.setVolume(streamId, 0, 0);
         int newStreamId = sp.play(soundIdsByNote.get(note), volume, volume, 1, 0, jublag.getSound(note).getPitch());
         streamIdsByNote.put(note, newStreamId);
-        Log.d("JublagActivity", String.format("Played note %s, stream id %d", note, newStreamId));
+        Log.d(TAG, String.format("Played note %s, stream id %d", note, newStreamId));
     }
 
     private void stopNote(Note note) {
@@ -226,14 +225,44 @@ public class JublagActivity extends AppCompatActivity implements View.OnTouchLis
         return true;
     } // end match
 
+    public void open(View view) {
+        //Simpler version below, but doesn't work for getting audio from recordings and I suspect the other version works
+        //for SD cards as well, though I haven't been able to test it yet.
+//        startActivityForResult(new Intent(Intent.ACTION_PICK,
+//                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI), SONG_SELECTED);
+
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.setType("audio/*");
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        Intent finalIntent = Intent.createChooser(intent, "Select song");
+        startActivityForResult(finalIntent, SONG_SELECTED);
+    }
+
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case SONG_SELECTED: {
+                try {
+                    DataSourceHelper.setMediaPlayerDataSource(this, mp, data.getDataString());
+                    mp.prepare();
+                } catch (IOException e) {
+                    Log.w(TAG, e.getMessage());
+                    toast("Failed to load song.");
+                }
+            }
+            break;
+            default:
+                break;
+        }
+    }
+
     public void play(View view) {
-        if (mp != null)
-            mp.start();
+        //TODO: get state
+        mp.start();
     }
 
     public void pause(View view) {
-        if (mp != null)
+        if (mp.isPlaying())
             mp.pause();
+        else mp.start();
     }
-
 }
