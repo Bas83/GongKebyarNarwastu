@@ -25,6 +25,10 @@ import java.util.Map;
 
 public class JublagActivity extends AppCompatActivity implements View.OnTouchListener {
 
+    //TODO: implement activity lifecycle, only instantiate mediaplayer when playing, release when paused, etc.
+    //TODO: implement media player state wrapper
+    //TODO: implement additional audio controls including trackbar
+
     private final int SONG_SELECTED = 1;
     private String TAG = "JublagActivity";
     private Map<Note, Integer> soundIdsByNote = new HashMap<>();
